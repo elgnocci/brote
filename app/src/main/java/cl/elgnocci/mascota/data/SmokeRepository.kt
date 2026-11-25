@@ -2,6 +2,7 @@ package cl.elgnocci.mascota.data
 
 import cl.elgnocci.mascota.domain.PetMood
 import cl.elgnocci.mascota.domain.Plan
+import cl.elgnocci.mascota.domain.foliageFor
 import cl.elgnocci.mascota.domain.islandStage
 import cl.elgnocci.mascota.domain.limitFor
 import cl.elgnocci.mascota.domain.logicalDayOf
@@ -28,6 +29,8 @@ data class TodayStatus(
     val cravingsResisted: Int,
     val canUndo: Boolean,
     val stage: Int,
+    val leaves: Int = 0,
+    val flowers: Int = 0,
 )
 
 /** Lo que las pantallas y el widget usan del repositorio (permite probarlas con un falso). */
@@ -115,6 +118,7 @@ internal fun computeStatus(
     val last = smokes.maxOfOrNull { it.atEpochMs }
     val canUndo = last != null && (now.toEpochMilli() - last) in 0..UNDO_WINDOW.toMillis()
 
+    val foliage = foliageFor(plan, limit, count)
     return TodayStatus(
         count = count,
         limit = limit,
@@ -122,5 +126,7 @@ internal fun computeStatus(
         cravingsResisted = cravingsResisted,
         canUndo = canUndo,
         stage = islandStage(plan, limit),
+        leaves = foliage.leaves,
+        flowers = foliage.flowers,
     )
 }

@@ -141,6 +141,15 @@ class SmokeRepositoryTest {
     }
 
     @Test
+    fun cadaCigarroBotaUnaHojaDeBrote() = runTest {
+        repo.logSmoke()
+        repo.logSmoke()
+        val s = status()
+        assertEquals(4, s.leaves)
+        assertEquals(0, s.flowers)
+    }
+
+    @Test
     fun sinPlanNoHayEstado() = runTest {
         plans.state.value = null
         assertNull(repo.status().first())
