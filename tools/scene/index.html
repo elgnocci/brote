@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Brote en su balcón</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* VOICE: tierno y de juguete; un simulador de bolsillo
+   IDEA: la pantalla de la app tal cual, con un panel de pruebas debajo para simular el día
+   PICTURE: el balcón 3D en vivo ocupando casi toda la pantalla
+   COLOUR and TYPE: cielo del balcón, terracota de Brote, verde hoja; Fredoka
+   LAYOUT: escena arriba (como el teléfono), estado en una línea, botones que se envuelven */
+:root{color-scheme:light dark;--bg:light-dark(#f4efe4,#16140f);--ink:light-dark(#22201a,#efe9dc);--muted:light-dark(#6d6656,#a59d8a);--line:light-dark(#e2d9c5,#36312a);--leaf:#3f9b4a;--pot:#e07352}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Fredoka,system-ui,sans-serif;overflow-x:clip}
+main{max-width:720px;margin:0 auto;padding:12px max(4vw,12px) 32px}
+.fig{position:relative;height:min(68vh,640px);border-radius:24px;overflow:hidden}
+.fig canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.status{display:flex;flex-wrap:wrap;gap:6px 14px;margin:12px 2px 10px;color:var(--muted);font-size:15px}
+.status b{color:var(--ink);font-weight:600}
+.row{display:flex;flex-wrap:wrap;gap:8px}
+button{font:500 15px Fredoka,system-ui,sans-serif;min-height:44px;padding:0 16px;border-radius:999px;border:1.5px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+button.smoke{background:var(--pot);border-color:var(--pot);color:#fff}
+button.crave{background:var(--leaf);border-color:var(--leaf);color:#fff}
+button:focus-visible{outline:3px solid var(--pot);outline-offset:2px}
+h1{font-size:clamp(26px,5vw,36px);line-height:1.05;margin:16px 2px 4px;font-weight:600}
+p.note{color:var(--muted);font-size:14px;margin:4px 2px 12px}
+</style>
+</head>
+<body>
+<main>
+<div class="fig"><canvas id="c" aria-label="Brote en su balcón"></canvas></div>
+<div class="status" id="status" aria-live="polite"></div>
+<div class="row">
+<button class="smoke" id="smoke">Fumé uno</button>
+<button class="crave" id="crave">Vencí unas ganas</button>
+<button id="undo">Deshacer</button>
+<button id="week">Semana cumplida</button>
+<button id="day">Nuevo día</button>
+<button id="reset">Reiniciar</button>
+</div>
+<h1>Brote en su balcón</h1>
+<p class="note">Vista previa para aprobar. Simula un día con límite inicial de 6: cada cigarro bota una hoja, "Semana cumplida" baja el límite (una hoja se vuelve flor y crece el balcón) y cada ganas vencidas suma una luciérnaga.</p>
+</main>
+<script src="vendor/three.min.js"></script>
+<script src="scene.js"></script>
+<script>
+{
+const START=6;
+let sim;
+const canvas=document.getElementById('c');
+const scene=new BroteScene(canvas,{animate:true});
+new ResizeObserver(()=>scene.resize()).observe(canvas);
+function reset(){sim={limit:START,count:0,resisted:0};apply()}
+function derive(){
+  const slots=Math.min(START,10),flowers=Math.round(slots*(START-sim.limit)/START);
+  const leaves=Math.max(0,slots-flowers-Math.ceil(sim.count/(START/slots)));
+  const mood=sim.count>sim.limit?'sick':sim.limit===0?'celebrating':sim.count===sim.limit?'tired':'happy';
+  return{stage:Math.round(6*(START-sim.limit)/START),mood,leaves,flowers,fireflies:sim.resisted};
+}
+const LABEL={happy:'contento',tired:'cansado',sick:'enfermo',celebrating:'celebrando'};
+function apply(){
+  const st=derive();scene.setState(st);
+  document.getElementById('status').innerHTML=`<span>Hoy <b>${sim.count} de ${sim.limit}</b></span><span>Brote <b>${LABEL[st.mood]}</b></span><span>Etapa <b>${st.stage}</b></span><span>Luciérnagas <b>${sim.resisted}</b></span>`;
+}
+document.getElementById('smoke').onclick=()=>{const before=derive().leaves;sim.count++;if(derive().leaves<before)scene.dropLeaf();apply()};
+document.getElementById('crave').onclick=()=>{sim.resisted++;apply()};
+document.getElementById('undo').onclick=()=>{sim.count=Math.max(0,sim.count-1);apply()};
+document.getElementById('week').onclick=()=>{sim.limit=Math.max(0,sim.limit-1);sim.count=0;apply()};
+document.getElementById('day').onclick=()=>{sim.count=0;apply()};
+document.getElementById('reset').onclick=reset;
+reset();
+}
+</script>
+</body>
+</html>
