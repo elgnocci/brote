@@ -30,24 +30,33 @@ data class TodayStatus(
     val stage: Int,
 )
 
+/** Lo que las pantallas y el widget usan del repositorio (permite probarlas con un falso). */
+interface BroteRepository {
+    fun status(): Flow<TodayStatus?>
+    suspend fun logSmoke()
+    suspend fun undoLast(): Boolean
+    suspend fun logCraving(resisted: Boolean)
+    suspend fun logMany(count: Int, day: LocalDate): Boolean
+}
+
 class SmokeRepository(
     db: SmokeDatabase,
     private val planStore: PlanStore,
     private val clock: Clock,
     private val refresher: WidgetRefresher,
-) {
+) : BroteRepository {
     private val dao = db.smokeDao()
 
     private fun now(): Instant = clock.instant()
     private fun today(): LocalDate = logicalDayOf(now(), clock.zone)
 
-    suspend fun logSmoke() {
+    override suspend fun logSmoke() {
         dao.insertSmoke(SmokeEvent(atEpochMs = now().toEpochMilli()))
         refresher.refresh()
     }
 
     /** Borra el último cigarro si se registró hace 10 minutos o menos. */
-    suspend fun undoLast(): Boolean {
+    override suspend fun undoLast(): Boolean {
         val last = dao.lastSmoke() ?: return false
         val age = now().toEpochMilli() - last.atEpochMs
         if (age < 0 || age > UNDO_WINDOW.toMillis()) return false
@@ -56,7 +65,7 @@ class SmokeRepository(
         return true
     }
 
-    suspend fun logCraving(resisted: Boolean) {
+    override suspend fun logCraving(resisted: Boolean) {
         dao.insertCraving(CravingEvent(atEpochMs = now().toEpochMilli(), resisted = resisted))
         refresher.refresh()
     }
@@ -65,7 +74,7 @@ class SmokeRepository(
      * "Sumar varios": carga [count] cigarros a [day] (por ejemplo, anoche en un carrete).
      * Si [day] es hoy quedan con la hora actual; si es un día anterior, a las 23:00 de ese día.
      */
-    suspend fun logMany(count: Int, day: LocalDate): Boolean {
+    override suspend fun logMany(count: Int, day: LocalDate): Boolean {
         if (count !in 1..MAX_BULK) return false
         val today = today()
         if (day.isAfter(today)) return false
@@ -81,7 +90,7 @@ class SmokeRepository(
     }
 
     /** El estado de hoy, recalculado cada vez que cambian los datos. `null` si aún no hay plan. */
-    fun status(): Flow<TodayStatus?> =
+    override fun status(): Flow<TodayStatus?> =
         combine(planStore.plan, dao.allSmokes(), dao.resistedCount()) { plan, smokes, resisted ->
             plan?.let { computeStatus(it, smokes, resisted, now(), clock.zone) }
         }
