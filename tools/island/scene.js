@@ -64,6 +64,29 @@ window.Island = (function () {
       pet.add(e);
     }
 
+    /* boca: cambia con el ánimo */
+    const mouthM = new THREE.MeshStandardMaterial({ color: 0x1d1a17, roughness: 0.4 });
+    const mouthAt = (mesh) => { mesh.position.set(0, 0.35, 0.4); mesh.rotation.x = -0.2; pet.add(mesh); };
+    if (moodName === 'celebrating') {
+      const open = new THREE.Mesh(new THREE.CircleGeometry(0.085, 20, Math.PI, Math.PI), mouthM);
+      mouthAt(open);
+      const tongue = new THREE.Mesh(new THREE.CircleGeometry(0.04, 16, Math.PI, Math.PI), matte('#ff8fa0'));
+      tongue.position.set(0, 0.315, 0.402);
+      tongue.rotation.x = -0.2;
+      pet.add(tongue);
+    } else if (moodName === 'tired') {
+      mouthAt(new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.026, 0.01), mouthM));
+    } else {
+      const smile = moodName !== 'sick';
+      const r = moodName === 'recovering' ? 0.05 : 0.07;
+      const arc = new THREE.Mesh(new THREE.TorusGeometry(r, 0.02, 8, 24, Math.PI), mouthM);
+      if (smile) arc.rotation.z = Math.PI;
+      mouthAt(arc);
+      arc.rotation.x = -0.2;
+      if (smile) arc.rotation.z = Math.PI;
+      arc.position.y = smile ? 0.36 + r * 0.6 : 0.3;
+    }
+
     /* brote */
     const plant = new THREE.Group();
     plant.position.y = 0.72;
