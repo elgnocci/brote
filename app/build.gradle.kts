@@ -24,6 +24,10 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+    sourceSets {
+        // La escena 3D vive en tools/scene y se empaqueta tal cual como assets de la app.
+        getByName("main").assets.srcDir("../tools/scene")
+    }
     buildFeatures {
         compose = true
     }

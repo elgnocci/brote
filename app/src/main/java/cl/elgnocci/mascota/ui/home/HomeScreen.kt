@@ -39,7 +39,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cl.elgnocci.mascota.data.MAX_BULK
 import cl.elgnocci.mascota.data.TodayStatus
-import cl.elgnocci.mascota.ui.pet.PetImage
+import cl.elgnocci.mascota.ui.scene.BroteScene
 import cl.elgnocci.mascota.ui.pet.moodDescription
 
 @Composable
@@ -62,7 +62,7 @@ private fun HomeContent(
         modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        PetImage(s.stage, s.mood, Modifier.fillMaxWidth().aspectRatio(1f))
+        BroteScene(s, Modifier.fillMaxWidth().aspectRatio(0.8f))
         Text(
             moodDescription(s.mood),
             style = MaterialTheme.typography.titleMedium,
