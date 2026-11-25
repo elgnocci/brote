@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Brote: etapas de la isla</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* VOICE: tierno, de taller; una hoja de contacto de un juguete
+   IDEA: la hoja de contacto de un set de maquetas: 7 fotos en fila, una por etapa
+   PICTURE: las 7 islas renderizadas, del mismo tamaño, en orden de crecimiento
+   COLOUR and TYPE: cielo celeste pálido de fondo de foto, verde brote, terracota; Fredoka
+   LAYOUT: estados arriba, grilla de 7 fotos que se reacomoda en el teléfono */
+:root{color-scheme:light dark;--bg:light-dark(#f4efe4,#16140f);--ink:light-dark(#22201a,#efe9dc);--muted:light-dark(#6d6656,#a59d8a);--card:light-dark(#dcebf0,#26343a);--line:light-dark(#e2d9c5,#36312a);--accent:#3f9b4a;--pot:#e2694a}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Fredoka,system-ui,sans-serif;overflow-x:clip}
+body.export{background:transparent}
+.band{padding:clamp(20px,4vw,48px) max(5vw,16px);max-width:1240px;margin:0 auto}
+h1{font-size:clamp(30px,6vw,44px);line-height:1.05;margin:0 0 6px;font-weight:600;text-wrap:balance}
+.sub{color:var(--muted);margin:0 0 14px;max-width:60ch}
+.states{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;position:sticky;top:0;z-index:2;background:var(--bg);padding:8px 0}
+.states button{font:500 15px Fredoka,system-ui,sans-serif;min-height:44px;padding:0 16px;border-radius:999px;border:1.5px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+.states button[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:#fff}
+.states button:focus-visible{outline:3px solid var(--pot);outline-offset:2px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,170px),1fr));gap:12px}
+figure{margin:0;background:var(--card);border-radius:18px;overflow:hidden}
+figure canvas{display:block;width:100%;aspect-ratio:1}
+figcaption{padding:8px 12px 12px;font-size:15px}figcaption b{font-weight:600;margin-right:6px;color:var(--pot)}
+.note{margin-top:16px;color:var(--muted);font-size:14px}
+#gl{position:absolute;left:-9999px}
+</style>
+</head>
+<body>
+<main class="band" id="gallery" hidden>
+<h1>Las 7 etapas de la isla</h1>
+<p class="sub">Cada vez que el límite baja, la isla suma algo. Cambia el estado para ver cómo se ve cada etapa.</p>
+<div class="states" role="group" aria-label="Estado de la mascota" id="states"></div>
+<div class="grid" id="grid"></div>
+<p class="note">Vista previa para aprobar. Estas mismas escenas se exportan como 35 imágenes de 512 × 512 px para la app y el widget.</p>
+</main>
+<canvas id="gl" width="512" height="512"></canvas>
+<script src="vendor/three.min.js"></script>
+<script src="scene.js"></script>
+<script>
+{
+const q=new URLSearchParams(location.search);
+const gl=document.getElementById('gl');
+const renderer=Island.makeRenderer(gl,512);
+if(q.has('stage')&&q.has('mood')){
+  document.body.className='export';
+  gl.style.position='static';
+  Island.draw(renderer,+q.get('stage'),q.get('mood'));
+  document.body.dataset.ready='1';
+}else{
+  const LABELS={happy:'Contenta',tired:'Cansada',sick:'Enferma',recovering:'Recuperándose',celebrating:'Celebrando'};
+  const moods=Object.keys(Island.MOODS);
+  const states=document.getElementById('states'),grid=document.getElementById('grid');
+  document.getElementById('gallery').hidden=false;
+  states.innerHTML=moods.map((m,i)=>`<button type="button" data-m="${m}" aria-pressed="${i===0}">${LABELS[m]}</button>`).join('');
+  grid.innerHTML=Island.STAGES.map((s,i)=>`<figure><canvas width="512" height="512" aria-label="Etapa ${i}: ${s}"></canvas><figcaption><b>${i}</b>${s}</figcaption></figure>`).join('');
+  const canvases=[...grid.querySelectorAll('canvas')];
+  const paint=(mood)=>canvases.forEach((cv,i)=>{Island.draw(renderer,i,mood);const ctx=cv.getContext('2d');ctx.clearRect(0,0,512,512);ctx.drawImage(gl,0,0)});
+  states.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;for(const x of states.children)x.setAttribute('aria-pressed',x===b);paint(b.dataset.m)});
+  paint('happy');
+}
+}
+</script>
+</body>
+</html>
