@@ -2,6 +2,9 @@ package cl.elgnocci.mascota.ui.scene
 
 import android.annotation.SuppressLint
 import android.graphics.Color
+import android.util.Log
+import android.webkit.ConsoleMessage
+import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.runtime.Composable
@@ -28,9 +31,14 @@ fun BroteScene(status: TodayStatus, modifier: Modifier = Modifier) {
             WebView(context).apply {
                 setBackgroundColor(Color.TRANSPARENT)
                 settings.javaScriptEnabled = true
-                settings.blockNetworkLoads = true
                 isVerticalScrollBarEnabled = false
                 isHorizontalScrollBarEnabled = false
+                webChromeClient = object : WebChromeClient() {
+                    override fun onConsoleMessage(message: ConsoleMessage): Boolean {
+                        Log.d("BroteScene", "${message.message()} (${message.sourceId()}:${message.lineNumber()})")
+                        return true
+                    }
+                }
                 webViewClient = object : WebViewClient() {
                     override fun onPageFinished(view: WebView, url: String?) {
                         bridge.ready = true

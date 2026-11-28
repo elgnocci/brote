@@ -4,16 +4,26 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Brote</title>
-<style>html,body{margin:0;height:100%;overflow:hidden;background:transparent}canvas{display:block;width:100%;height:100%}</style>
+<style>html,body{margin:0;height:100%;overflow:hidden;background:#cfe6ef}canvas{display:block;width:100%;height:100%}
+#err{position:absolute;left:8px;right:8px;bottom:8px;font:13px/1.4 sans-serif;color:#7a1f12;background:#fff4f0;border-radius:8px;padding:8px;white-space:pre-wrap;display:none}</style>
 </head>
 <body>
 <canvas id="c"></canvas>
+<div id="err"></div>
+<script>
+  /* Si algo falla, se muestra en pantalla para poder diagnosticarlo desde el teléfono. */
+  function showError(msg) { const e = document.getElementById('err'); e.style.display = 'block'; e.textContent += msg + '\n'; }
+  window.onerror = function (msg, src, line) { showError('Error: ' + msg + ' (' + (src || '').split('/').pop() + ':' + line + ')'); };
+</script>
 <script src="vendor/three.min.js"></script>
 <script src="scene.js"></script>
 <script>
 {
   /* Página que usa la app Android: la app llama Brote.setState(json) y Brote.dropLeaf(). */
   const canvas = document.getElementById('c');
+  if (typeof THREE === 'undefined') showError('No se cargó three.js');
+  const probe = document.createElement('canvas');
+  if (!(probe.getContext('webgl2') || probe.getContext('webgl'))) showError('Este teléfono no da WebGL a la app');
   const scene = new BroteScene(canvas, { animate: true });
   new ResizeObserver(() => scene.resize()).observe(canvas);
   window.Brote = {
